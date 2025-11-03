@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#define INF 9999
+
+int find(int parent[], int i) {
+	if(parent[i] != i)
+		parent[i] = find(parent, parent[i]);
+	return parent[i];
+}
+
+
+void union1(int parent[], int rank[], int i, int j) {
+	int ri = find(parent, i);
+	int rj = find(parent, j);
+	if(rank[ri] < rank[rj])
+		parent[ri] = rj;
+	else if(rank[ri] > rank[rj])
+		parent[rj] = ri;
+	else{
+		parent[rj] = ri;
+		rank[ri]++;
+	}
+	// Write your code here...
+}
+
+
+void kruskalMST(int **cost, int V) {
+	int parent[V], rank[V];
+	for(int i = 0; i<V; i++){
+		parent[i] = i;
+		rank[i] = 0;
+	}
+	int edgecount = 0;
+	int edges[V*V][3];
+	for(int i = 0; i<V; i++){
+		for(int j = i+1; j<V ; j++){
+			if(cost[i][j] != 9999){
+				edges[edgecount][0] = i;
+				edges[edgecount][1] = j;
+				edges[edgecount][2] = cost[i][j];
+				edgecount++;
+			}
+		}
+	}
+	for(int i = 0; i<edgecount-1; i++){
+		for(int j = 0; j<edgecount-i-1; j++){
+			if(edges[j][2]>edges[j+1][2]){
+				int temp[3] = {edges[j][0], edges[j][1], edges[j][2]};
+				edges[j][0] = edges[j+1][0];
+				edges[j][1] = edges[j+1][1];
+				edges[j][2] = edges[j+1][2];
+				edges[j+1][0] = temp[0];
+				edges[j+1][1] = temp[1];
+				edges[j+1][2] = temp[2];
+			}
+		}
+	}
+	int totalcost = 0;
+	int edgeindex = 0;
+	//printf("Edges selected for MCST:\n");
+	for(int i=0, count = 0 ; i<edgecount && count<V-1; i++){
+		int u = edges[i][0];
+		int v = edges[i][1];
+		int w = edges[i][2];
+		if(find(parent, u) != find(parent, v)){
+			union1(parent, rank, u, v);
+			printf("Edge %d:(%d, %d) cost:%d\n", edgeindex++ , u , v ,w);
+			totalcost += w;
+			count++;
+		}
+	}
+	printf("Minimum cost= %d\n",totalcost);
+}
+
+
+int main() {
+    int V;
+    printf("No of vertices: ");
+    scanf("%d", &V);
+
+    int **cost = (int **)malloc(V * sizeof(int *));
+    for (int i = 0; i < V; i++)
+        cost[i] = (int *)malloc(V * sizeof(int));
+
+    printf("Adjacency matrix:\n");
+    for (int i = 0; i < V; i++)
+        for (int j = 0; j < V; j++)
+            scanf("%d", &cost[i][j]);
+
+    kruskalMST(cost, V);
+
+    for (int i = 0; i < V; i++)
+        free(cost[i]);
+    free(cost);
+
+    return 0;
+}
